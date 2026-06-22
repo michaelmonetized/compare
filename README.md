@@ -19,7 +19,9 @@ Running `time cmd-a; time cmd-b` back-to-back is misleading — shared filesyste
 |--------------|-----|
 | Git repository with a clean or commit-able working tree | Creates a snapshot commit and temporary branches |
 | POSIX shell (`bash` 4+) | Command execution and `time` builtin |
+
 | Write access to the parent of `--cwd` | Default logs go to `../tests/` relative to cwd |
+| [mdr](https://github.com/CleverCloud/mdr) (recommended) | Renders `--md` reports with mermaid SVG support |
 
 Commands are passed as quoted strings and executed via the shell — only compare trusted commands.
 
@@ -63,7 +65,7 @@ compare "vp exec biome format --fix" "vp exec oxlint --fix" -n 100
 compare "npm test" "npm run test:fast" -c ./my-project -o ./results/bench.log
 ```
 
-**With terminal charts** — plot user, system, and total time after the run:
+**With terminal charts** — plot user, system, CPU, and total time after the run:
 
 ```bash
 compare "vp exec biome format --fix" "vp exec oxlint --fix" -n 20 --graph
@@ -73,6 +75,18 @@ compare "vp exec biome format --fix" "vp exec oxlint --fix" -n 20 --graph
 
 ```bash
 compare graph ./results/bench.log
+```
+
+**Markdown report** — writes a `.md` file (tables + mermaid charts) and opens it in [mdr](https://github.com/CleverCloud/mdr):
+
+```bash
+compare "vp exec biome format --fix" "vp exec oxlint --fix" -n 20 --md
+```
+
+Creates `bench.md` alongside `bench.log` (same path, `.md` extension). If [mdr](https://github.com/CleverCloud/mdr) is installed, `compare` runs `mdr bench.md` — GFM tables in the terminal plus mermaid rendered as SVG in mdr's helper window. Without mdr, falls back to `open` (macOS) or `xdg-open` (Linux).
+
+```bash
+brew install CleverCloud/misc/mdr
 ```
 
 ## CLI reference
@@ -96,6 +110,7 @@ compare <command-a> <command-b> [options]
 | `-c`, `--cwd <path>` | Working directory for both commands. | current directory |
 | `-o`, `--output <path>` | Log file path. See [Output file naming](#output-file-naming). | see below |
 | `-g`, `--graph` | Render terminal line charts after the benchmark | off |
+| `--md` | Write a markdown report (`.md`) with tables and mermaid charts, then view with mdr | off |
 | `-h`, `--help` | Show help and exit. | — |
 
 ### Graph subcommand
@@ -104,7 +119,7 @@ compare <command-a> <command-b> [options]
 compare graph <log-file>
 ```
 
-Reads a compare log file and prints three terminal line charts — **user time**, **system time**, and **total time** — with one series per command (blue for command A, yellow for command B). X-axis is iteration number.
+Reads a compare log file and prints four terminal line charts — **user time**, **system time**, **CPU %**, and **total time** — with one series per command (blue for command A, yellow for command B). X-axis is iteration number.
 
 ### Output file naming
 
